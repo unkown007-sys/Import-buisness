@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Landed Cost — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF0E7;
+    --card:#FBFAF6;
+    --ink:#1C2541;
+    --ink-soft:#4A5270;
+    --red:#B23A2E;
+    --gold:#B8863A;
+    --green:#3B6E4E;
+    --line:#D6D1BF;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* airmail stripe bar */
+  .airmail-bar{
+    height:10px;
+    width:100%;
+    background:repeating-linear-gradient(
+      45deg,
+      var(--red) 0px, var(--red) 14px,
+      #fff 14px, #fff 28px,
+      var(--ink) 28px, var(--ink) 42px,
+      #fff 42px, #fff 56px
+    );
+  }
+
+  .wrap{
+    max-width:920px;
+    margin:0 auto;
+    padding:0 24px 80px;
+  }
+
+  header.hero{
+    padding:40px 0 28px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:32px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--red);
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:8px;height:8px;
+    background:var(--red);
+    display:inline-block;
+    transform:rotate(45deg);
+  }
+  h1{
+    font-family:'Big Shoulders Display',sans-serif;
+    font-weight:800;
+    font-size:clamp(32px,5vw,52px);
+    line-height:1.02;
+    margin:14px 0 12px;
+    letter-spacing:-0.01em;
+  }
+  header.hero p{
+    max-width:56ch;
+    color:var(--ink-soft);
+    font-size:15.5px;
+    line-height:1.55;
+    margin:0;
+  }
+
+  /* item picker */
+  .picker-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+  }
+  .picker{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:36px;
+  }
+  .chip{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    padding:10px 16px;
+    border:1.5px solid var(--line);
+    background:var(--card);
+    color:var(--ink);
+    border-radius:3px;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease, transform .1s ease;
+  }
+  .chip:hover{border-color:var(--ink);}
+  .chip.active{
+    background:var(--ink);
+    border-color:var(--ink);
+    color:var(--paper);
+  }
+  .chip .cat{
+    display:block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    font-weight:400;
+    opacity:.65;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    margin-top:2px;
+  }
+
+  section.results h2{
+    font-family:'Big Shoulders Display',sans-serif;
+    font-size:22px;
+    font-weight:800;
+    margin:0 0 4px;
+  }
+  .results-sub{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-bottom:20px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:16px;
+  }
+
+  .card{
+    position:relative;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-top:4px solid var(--ink);
+    padding:20px 18px 18px;
+    overflow:hidden;
+    opacity:0;
+    transform:translateY(6px);
+    animation:rise .35s ease forwards;
+  }
+  @keyframes rise{ to{opacity:1; transform:translateY(0);} }
+
+  .card.best{ border-top-color:var(--green); }
+
+  .source-name{
+    font-family:'Big Shoulders Display',sans-serif;
+    font-weight:800;
+    font-size:19px;
+    margin:0 0 2px;
+  }
+  .source-note{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-bottom:16px;
+  }
+
+  .line{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-size:13px;
+    padding:6px 0;
+    border-bottom:1px dashed var(--line);
+    color:var(--ink-soft);
+  }
+  .line span:last-child{
+    font-family:'IBM Plex Mono',monospace;
+    color:var(--ink);
+    font-weight:500;
+  }
+
+  .total-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-top:14px;
+    padding-top:12px;
+    border-top:1.5px solid var(--ink);
+  }
+  .total-row .label{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    font-weight:600;
+    color:var(--ink-soft);
+  }
+  .total-row .amount{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:24px;
+    font-weight:600;
+  }
+  .card.best .amount{ color:var(--green); }
+
+  .stamp{
+    position:absolute;
+    top:14px;
+    right:-30px;
+    width:150px;
+    text-align:center;
+    transform:rotate(11deg);
+    border:2px solid var(--green);
+    color:var(--green);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    font-weight:600;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    padding:5px 0;
+    border-radius:2px;
+    opacity:.9;
+  }
+  .stamp span{ display:block; font-size:13px; font-weight:700; }
+
+  .formula{
+    margin-top:36px;
+    border:1px solid var(--line);
+    background:var(--card);
+  }
+  .formula summary{
+    cursor:pointer;
+    padding:14px 18px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--ink-soft);
+    font-weight:600;
+  }
+  .formula-body{
+    padding:0 18px 18px;
+    font-size:13.5px;
+    line-height:1.7;
+    color:var(--ink-soft);
+  }
+  .formula-body code{
+    font-family:'IBM Plex Mono',monospace;
+    background:var(--paper);
+    padding:1px 6px;
+    border-radius:2px;
+    color:var(--ink);
+    font-size:12.5px;
+  }
+
+  .disclaimer{
+    margin-top:20px;
+    font-size:12px;
+    color:var(--ink-soft);
+    border-left:3px solid var(--red);
+    padding:8px 14px;
+    background:var(--card);
+  }
+
+  footer{
+    margin-top:56px;
+    padding-top:20px;
+    border-top:1px solid var(--line);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+
+  @media (max-width:520px){
+    .stamp{ right:10px; top:10px; width:110px; font-size:9px;}
+    .stamp span{ font-size:11px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="airmail-bar"></div>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">Landed Cost Estimator — Prototype</div>
+    <h1>What will it actually cost<br>to get this into India?</h1>
+    <p>Pick an item. See it priced across a few overseas sources, with shipping, customs duty, and GST already worked in — so the number you see is the number you'd actually pay, not just the sticker price.</p>
+  </header>
+
+  <div class="picker-label">01 — Choose an item</div>
+  <div class="picker" id="picker"></div>
+
+  <section class="results">
+    <h2 id="result-title">—</h2>
+    <div class="results-sub">Sorted by total landed cost. Lowest cost is marked cleared.</div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <details class="formula">
+    <summary>How the total is calculated</summary>
+    <div class="formula-body">
+      Assessable value = <code>item price + shipping</code><br>
+      Customs duty = <code>10% of assessable value</code> (flat personal-use import rate)<br>
+      IGST = <code>18% of (assessable value + duty)</code><br>
+      Total landed cost = <code>assessable value + duty + IGST</code><br><br>
+      This is the simplified personal-import formula — real shipments can vary by declared value, courier vs. postal route, and product category. Good enough to compare options; not a substitute for checking the exact rule at the time of import.
+    </div>
+  </details>
+
+  <div class="disclaimer">
+    Demo data for prototype purposes — prices and shipping estimates are illustrative, not pulled live from these sites. The real version would refresh these from actual listings.
+  </div>
+
+  <footer>
+    <span>PROTOTYPE — NOT FOR SALE</span>
+    <span id="clock"></span>
+  </footer>
+
+</div>
+
+<script>
+const items = [
+  {
+    id: "spidey",
+    name: "Hot Toys Spider-Man Figure",
+    cat: "Collectible",
+    sources: [
+      { name: "HobbyLink Japan", note: "¥68,000", price: 42000, shipping: 3800 },
+      { name: "YesAsia", note: "$475", price: 39500, shipping: 4200 },
+      { name: "Naver Shopping", note: "₩215,000 · via forwarder", price: 37800, shipping: 5100 },
+    ]
+  },
+  {
+    id: "lightstick",
+    name: "BTS Official Lightstick",
+    cat: "K-pop merch",
+    sources: [
+      { name: "Weverse Shop", note: "₩49,000", price: 5200, shipping: 1800 },
+      { name: "YesAsia", note: "$67", price: 5600, shipping: 1500 },
+      { name: "Coupang", note: "₩45,000 · via forwarder", price: 4800, shipping: 2100 },
+    ]
+  },
+  {
+    id: "pokemon",
+    name: "Pokémon JP Booster Box",
+    cat: "Trading cards",
+    sources: [
+      { name: "AmiAmi", note: "¥13,200", price: 8200, shipping: 2400 },
+      { name: "Rakuten Global", note: "¥13,800", price: 8600, shipping: 2100 },
+      { name: "Suruga-ya", note: "¥12,700", price: 7900, shipping: 2600 },
+    ]
+  },
+  {
+    id: "dunks",
+    name: "Nike Dunk — Korea Exclusive",
+    cat: "Sneakers",
+    sources: [
+      { name: "Naver Smart Store", note: "₩112,000", price: 9800, shipping: 2200 },
+      { name: "ABC Mart Korea", note: "₩120,000", price: 10500, shipping: 1900 },
+      { name: "Musinsa", note: "₩105,000", price: 9200, shipping: 2400 },
+    ]
+  },
+  {
+    id: "kuji",
+    name: "Demon Slayer Ichiban Kuji Set",
+    cat: "Anime figures",
+    sources: [
+      { name: "AmiAmi", note: "¥10,300", price: 6400, shipping: 1900 },
+      { name: "Mandarake", note: "¥9,500", price: 5900, shipping: 2200 },
+      { name: "Rakuten Global", note: "¥10,900", price: 6800, shipping: 1700 },
+    ]
+  },
+];
+
+const inr = n => "₹" + Math.round(n).toLocaleString("en-IN");
+
+function calc(price, shipping){
+  const assessable = price + shipping;
+  const duty = assessable * 0.10;
+  const igst = (assessable + duty) * 0.18;
+  const total = assessable + duty + igst;
+  return { assessable, duty, igst, total };
+}
+
+const picker = document.getElementById("picker");
+const grid = document.getElementById("grid");
+const resultTitle = document.getElementById("result-title");
+
+function renderPicker(activeId){
+  picker.innerHTML = "";
+  items.forEach(it => {
+    const chip = document.createElement("div");
+    chip.className = "chip" + (it.id === activeId ? " active" : "");
+    chip.innerHTML = it.name + "<span class='cat'>" + it.cat + "</span>";
+    chip.onclick = () => select(it.id);
+    picker.appendChild(chip);
+  });
+}
+
+function select(id){
+  const item = items.find(i => i.id === id);
+  resultTitle.textContent = item.name;
+
+  const computed = item.sources.map(s => ({...s, ...calc(s.price, s.shipping)}));
+  const min = Math.min(...computed.map(c => c.total));
+
+  grid.innerHTML = "";
+  computed.forEach((c, idx) => {
+    const isBest = c.total === min;
+    const card = document.createElement("div");
+    card.className = "card" + (isBest ? " best" : "");
+    card.style.animationDelay = (idx * 60) + "ms";
+    card.innerHTML = `
+      ${isBest ? `<div class="stamp">Cleared<span>Lowest cost</span></div>` : ""}
+      <div class="source-name">${c.name}</div>
+      <div class="source-note">${c.note}</div>
+      <div class="line"><span>Item price</span><span>${inr(c.price)}</span></div>
+      <div class="line"><span>Shipping</span><span>${inr(c.shipping)}</span></div>
+      <div class="line"><span>Customs duty (10%)</span><span>${inr(c.duty)}</span></div>
+      <div class="line"><span>IGST (18%)</span><span>${inr(c.igst)}</span></div>
+      <div class="total-row">
+        <span class="label">Landed cost</span>
+        <span class="amount">${inr(c.total)}</span>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  renderPicker(id);
+}
+
+select(items[0].id);
+document.getElementById("clock").textContent = "Built " + new Date().toLocaleDateString("en-IN", {day:"numeric", month:"short", year:"numeric"});
+</script>
+
+</body>
+</html>
